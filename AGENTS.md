@@ -39,6 +39,11 @@ There is no separate unit test framework yet; the flake checks are the test suit
 - Update or add a flake check when behavior changes.
 - Validate both evaluation and build paths when touching scheme discovery, Home Manager activation, or target rendering.
 - For runtime changes, smoke test with `hsx list`, `hsx current`, and `hsx set <style>`.
+- When reusing upstream templates, verify placeholder format carefully. Some templates expect bare hex (`101010`), not `#101010`.
+- Some apps need post-write rebuild steps beyond writing the theme file, e.g. cache rebuilds. Validate the app can actually see the new runtime theme after `hsx set`.
+- Before shipping a new target, test against `dotnix` with a local override:
+  `darwin-rebuild switch --flake ~/Projects/dotnix#macbook-pro --override-input hot-stylix path:$PWD --impure`
+- Inspect both runtime files in `~/.local/state/hot-stylix/<app>/...` and the live linked config under `~/.config/...` to catch mismatches between rendered output and active app config.
 
 ## Commit Guidelines
 
@@ -64,6 +69,7 @@ When Stylix updates, keep `README.md` and app support in sync.
   7. add a reload hook only if the app has a reliable live-reload mechanism
 - Prefer consistent mechanics across apps: mutable runtime file, persistent current style, best-effort reload hook, and no rebuild required for switching.
 - Hot reload methods vary by app. Prefer official CLI/API reloads first, then documented signals, then platform automation hooks only when necessary.
+- Symlinks are not automatically a problem. Prefer the existing mutable state file + Home Manager link model unless there is evidence an app rejects symlinked theme/config files.
 
 ## Configuration Notes
 

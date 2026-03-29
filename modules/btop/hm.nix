@@ -86,7 +86,6 @@ EOF
     }
     (lib.mkIf config.programs.hot-stylix.targets.btop.enable {
       programs.btop.enable = lib.mkDefault true;
-      programs.btop.package = lib.mkDefault null;
       programs.btop.settings.color_theme = lib.mkForce "hot-stylix-current";
       programs.btop.settings.theme_background = lib.mkIf (config.stylix.opacity.terminal != 1.0) false;
 
