@@ -12,9 +12,11 @@ Why use it:
 - get hot reload for apps that support it
 - stay close to Stylix behavior and output formats
 
-Current target:
+Current targets:
 
+- bat: theme switching
 - Ghostty: theme switching + hot reload
+- btop: theme switching
 
 ## Use
 
@@ -70,12 +72,12 @@ This matrix is based on the full target list in the pinned Stylix source. Right 
 | `anki` | ❌ | ❌ |
 | `ashell` | ❌ | ❌ |
 | `avizo` | ❌ | ❌ |
-| `bat` | ❌ | ❌ |
+| `bat` | ✅ | ❌ |
 | `bemenu` | ❌ | ❌ |
 | `blender` | ❌ | ❌ |
 | `broot` | ❌ | ❌ |
 | `bspwm` | ❌ | ❌ |
-| `btop` | ❌ | ❌ |
+| `btop` | ✅ | ❌ |
 | `cava` | ❌ | ❌ |
 | `cavalier` | ❌ | ❌ |
 | `chromium` | ❌ | ❌ |

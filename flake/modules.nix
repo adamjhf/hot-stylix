@@ -16,6 +16,7 @@ in
   homeManagerModules = {
     default = self.homeManagerModules.hot-stylix;
     hot-stylix = { ... }: {
+      _module.args.hotStylixInputs = inputs;
       imports = [
         inputs.stylix.homeModules.stylix
         ./hm.nix
