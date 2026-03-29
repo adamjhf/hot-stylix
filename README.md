@@ -16,30 +16,35 @@ Current target:
 
 - Ghostty: theme switching + hot reload
 
-## Structure
-
-- `flake.nix`: top-level flake entrypoint
-- `flake/modules.nix`: exports Home Manager modules; dynamically imports every `modules/<app>/hm.nix`
-- `flake/hm.nix`: shared Home Manager core for options, CLI generation, scheme handling, and activation
-- `flake/checks.nix`: flake checks
-- `modules/<app>/hm.nix`: app-specific integration, renderer, and reload hooks
-
-The `modules/` directory is app targets only. Shared logic lives under `flake/`.
-
 ## Use
 
 ```nix
 {
-  inputs.hot-stylix.url = "path:/Users/adam/Projects/hot-stylix";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    stylix.url = "github:danth/stylix";
+    hot-stylix.url = "github:adamjhf/hot-stylix";
+  };
 
-  imports = [
-    inputs.hot-stylix.homeManagerModules.default
-  ];
+  outputs = { nixpkgs, home-manager, hot-stylix, ... }: {
+    homeConfigurations.me = home-manager.lib.homeManagerConfiguration {
+      pkgs = import nixpkgs { system = "aarch64-darwin"; };
+      modules = [
+        hot-stylix.homeManagerModules.default
+        {
+          home.username = "me";
+          home.homeDirectory = "/Users/me";
+          home.stateVersion = "25.05";
 
-  programs.hot-stylix.enable = true;
+          stylix.enable = true;
+          stylix.base16Scheme = nixpkgs.legacyPackages.aarch64-darwin.base16-schemes + "/share/themes/tokyo-night-dark.yaml";
 
-  stylix.enable = true;
-  stylix.base16Scheme = pkgs.base16-schemes + "/share/themes/tokyo-night-dark.yaml";
+          programs.hot-stylix.enable = true;
+        }
+      ];
+    };
+  };
 }
 ```
 
@@ -61,111 +66,111 @@ This matrix is based on the full target list in the pinned Stylix source. Right 
 
 | App | Theme switching | Hot reload |
 | --- | --- | --- |
-| `alacritty` | No | No |
-| `anki` | No | No |
-| `ashell` | No | No |
-| `avizo` | No | No |
-| `bat` | No | No |
-| `bemenu` | No | No |
-| `blender` | No | No |
-| `broot` | No | No |
-| `bspwm` | No | No |
-| `btop` | No | No |
-| `cava` | No | No |
-| `cavalier` | No | No |
-| `chromium` | No | No |
-| `console` | No | No |
-| `dank-material-shell` | No | No |
-| `discord` | No | No |
-| `dunst` | No | No |
-| `emacs` | No | No |
-| `eog` | No | No |
-| `fcitx5` | No | No |
-| `feh` | No | No |
-| `firefox` | No | No |
-| `fish` | No | No |
-| `fnott` | No | No |
-| `foliate` | No | No |
-| `font-packages` | No | No |
-| `fontconfig` | No | No |
-| `foot` | No | No |
-| `forge` | No | No |
-| `fuzzel` | No | No |
-| `fzf` | No | No |
-| `gdu` | No | No |
-| `gedit` | No | No |
-| `ghostty` | Yes | Yes |
-| `gitui` | No | No |
-| `glance` | No | No |
-| `gnome` | No | No |
-| `gnome-text-editor` | No | No |
-| `grub` | No | No |
-| `gtk` | No | No |
-| `gtksourceview` | No | No |
-| `halloy` | No | No |
-| `helix` | No | No |
-| `hyprland` | No | No |
-| `hyprlock` | No | No |
-| `hyprpanel` | No | No |
-| `hyprpaper` | No | No |
-| `i3` | No | No |
-| `i3bar-river` | No | No |
-| `i3status-rust` | No | No |
-| `jankyborders` | No | No |
-| `jjui` | No | No |
-| `k9s` | No | No |
-| `kde` | No | No |
-| `kitty` | No | No |
-| `kmscon` | No | No |
-| `kubecolor` | No | No |
-| `lazygit` | No | No |
-| `lightdm` | No | No |
-| `limine` | No | No |
-| `mako` | No | No |
-| `mangohud` | No | No |
-| `micro` | No | No |
-| `mpv` | No | No |
-| `ncspot` | No | No |
-| `neovim` | No | No |
-| `nixos-icons` | No | No |
-| `noctalia-shell` | No | No |
-| `nushell` | No | No |
-| `obsidian` | No | No |
-| `opencode` | No | No |
-| `plymouth` | No | No |
-| `qt` | No | No |
-| `qutebrowser` | No | No |
-| `regreet` | No | No |
-| `rio` | No | No |
-| `river` | No | No |
-| `rofi` | No | No |
-| `sioyek` | No | No |
-| `spicetify` | No | No |
-| `spotify-player` | No | No |
-| `starship` | No | No |
-| `sway` | No | No |
-| `swaylock` | No | No |
-| `swaync` | No | No |
-| `sxiv` | No | No |
-| `tmux` | No | No |
-| `tofi` | No | No |
-| `vicinae` | No | No |
-| `vivid` | No | No |
-| `vscode` | No | No |
-| `waybar` | No | No |
-| `wayfire` | No | No |
-| `wayprompt` | No | No |
-| `wezterm` | No | No |
-| `wob` | No | No |
-| `wofi` | No | No |
-| `wpaperd` | No | No |
-| `xfce` | No | No |
-| `xresources` | No | No |
-| `yazi` | No | No |
-| `zathura` | No | No |
-| `zed` | No | No |
-| `zellij` | No | No |
-| `zen-browser` | No | No |
+| `alacritty` | ❌ | ❌ |
+| `anki` | ❌ | ❌ |
+| `ashell` | ❌ | ❌ |
+| `avizo` | ❌ | ❌ |
+| `bat` | ❌ | ❌ |
+| `bemenu` | ❌ | ❌ |
+| `blender` | ❌ | ❌ |
+| `broot` | ❌ | ❌ |
+| `bspwm` | ❌ | ❌ |
+| `btop` | ❌ | ❌ |
+| `cava` | ❌ | ❌ |
+| `cavalier` | ❌ | ❌ |
+| `chromium` | ❌ | ❌ |
+| `console` | ❌ | ❌ |
+| `dank-material-shell` | ❌ | ❌ |
+| `discord` | ❌ | ❌ |
+| `dunst` | ❌ | ❌ |
+| `emacs` | ❌ | ❌ |
+| `eog` | ❌ | ❌ |
+| `fcitx5` | ❌ | ❌ |
+| `feh` | ❌ | ❌ |
+| `firefox` | ❌ | ❌ |
+| `fish` | ❌ | ❌ |
+| `fnott` | ❌ | ❌ |
+| `foliate` | ❌ | ❌ |
+| `font-packages` | ❌ | ❌ |
+| `fontconfig` | ❌ | ❌ |
+| `foot` | ❌ | ❌ |
+| `forge` | ❌ | ❌ |
+| `fuzzel` | ❌ | ❌ |
+| `fzf` | ❌ | ❌ |
+| `gdu` | ❌ | ❌ |
+| `gedit` | ❌ | ❌ |
+| `ghostty` | ✅ | ✅ |
+| `gitui` | ❌ | ❌ |
+| `glance` | ❌ | ❌ |
+| `gnome` | ❌ | ❌ |
+| `gnome-text-editor` | ❌ | ❌ |
+| `grub` | ❌ | ❌ |
+| `gtk` | ❌ | ❌ |
+| `gtksourceview` | ❌ | ❌ |
+| `halloy` | ❌ | ❌ |
+| `helix` | ❌ | ❌ |
+| `hyprland` | ❌ | ❌ |
+| `hyprlock` | ❌ | ❌ |
+| `hyprpanel` | ❌ | ❌ |
+| `hyprpaper` | ❌ | ❌ |
+| `i3` | ❌ | ❌ |
+| `i3bar-river` | ❌ | ❌ |
+| `i3status-rust` | ❌ | ❌ |
+| `jankyborders` | ❌ | ❌ |
+| `jjui` | ❌ | ❌ |
+| `k9s` | ❌ | ❌ |
+| `kde` | ❌ | ❌ |
+| `kitty` | ❌ | ❌ |
+| `kmscon` | ❌ | ❌ |
+| `kubecolor` | ❌ | ❌ |
+| `lazygit` | ❌ | ❌ |
+| `lightdm` | ❌ | ❌ |
+| `limine` | ❌ | ❌ |
+| `mako` | ❌ | ❌ |
+| `mangohud` | ❌ | ❌ |
+| `micro` | ❌ | ❌ |
+| `mpv` | ❌ | ❌ |
+| `ncspot` | ❌ | ❌ |
+| `neovim` | ❌ | ❌ |
+| `nixos-icons` | ❌ | ❌ |
+| `noctalia-shell` | ❌ | ❌ |
+| `nushell` | ❌ | ❌ |
+| `obsidian` | ❌ | ❌ |
+| `opencode` | ❌ | ❌ |
+| `plymouth` | ❌ | ❌ |
+| `qt` | ❌ | ❌ |
+| `qutebrowser` | ❌ | ❌ |
+| `regreet` | ❌ | ❌ |
+| `rio` | ❌ | ❌ |
+| `river` | ❌ | ❌ |
+| `rofi` | ❌ | ❌ |
+| `sioyek` | ❌ | ❌ |
+| `spicetify` | ❌ | ❌ |
+| `spotify-player` | ❌ | ❌ |
+| `starship` | ❌ | ❌ |
+| `sway` | ❌ | ❌ |
+| `swaylock` | ❌ | ❌ |
+| `swaync` | ❌ | ❌ |
+| `sxiv` | ❌ | ❌ |
+| `tmux` | ❌ | ❌ |
+| `tofi` | ❌ | ❌ |
+| `vicinae` | ❌ | ❌ |
+| `vivid` | ❌ | ❌ |
+| `vscode` | ❌ | ❌ |
+| `waybar` | ❌ | ❌ |
+| `wayfire` | ❌ | ❌ |
+| `wayprompt` | ❌ | ❌ |
+| `wezterm` | ❌ | ❌ |
+| `wob` | ❌ | ❌ |
+| `wofi` | ❌ | ❌ |
+| `wpaperd` | ❌ | ❌ |
+| `xfce` | ❌ | ❌ |
+| `xresources` | ❌ | ❌ |
+| `yazi` | ❌ | ❌ |
+| `zathura` | ❌ | ❌ |
+| `zed` | ❌ | ❌ |
+| `zellij` | ❌ | ❌ |
+| `zen-browser` | ❌ | ❌ |
 
 ## Custom Styles
 
@@ -233,12 +238,12 @@ Attrset style:
 }
 ```
 
-## Notes
+## Structure
 
-- Stylix remains the source for the initial/default style.
-- Runtime-selected styles persist across Home Manager activations.
-- `hsx` comes from shared logic in `flake/hm.nix`; each supported app is added as `modules/<app>/hm.nix`.
-- Ghostty uses a mutable runtime config fragment, so `reload_config` re-reads live colors directly.
-- Ghostty reloads in-place on `hsx set` via `SIGUSR2` plus AppleScript `reload_config`.
-- First live reload may trigger a macOS Automation prompt for the calling terminal app.
-- Add more styles with `programs.hot-stylix.schemes`.
+- `flake.nix`: top-level flake entrypoint
+- `flake/modules.nix`: exports Home Manager modules; dynamically imports every `modules/<app>/hm.nix`
+- `flake/hm.nix`: shared Home Manager core for options, CLI generation, scheme handling, and activation
+- `flake/checks.nix`: flake checks
+- `modules/<app>/hm.nix`: app-specific integration, renderer, and reload hooks
+
+The `modules/` directory is app targets only. Shared logic lives under `flake/`.
