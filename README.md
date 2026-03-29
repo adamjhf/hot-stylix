@@ -17,6 +17,7 @@ Current targets:
 - bat: theme switching
 - Ghostty: theme switching + hot reload
 - btop: theme switching
+- helix: theme switching
 
 ## Use
 
@@ -110,7 +111,7 @@ This matrix is based on the full target list in the pinned Stylix source. Right 
 | `gtk` | ❌ | ❌ |
 | `gtksourceview` | ❌ | ❌ |
 | `halloy` | ❌ | ❌ |
-| `helix` | ❌ | ❌ |
+| `helix` | ✅ | ❌ |
 | `hyprland` | ❌ | ❌ |
 | `hyprlock` | ❌ | ❌ |
 | `hyprpanel` | ❌ | ❌ |
