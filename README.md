@@ -12,13 +12,6 @@ Why use it:
 - get hot reload for apps that support it
 - stay close to Stylix behavior and output formats
 
-Current targets:
-
-- bat: theme switching
-- Ghostty: theme switching + hot reload
-- btop: theme switching
-- helix: theme switching
-
 ## Use
 
 ```nix
@@ -65,7 +58,7 @@ hsx reset
 `Theme switching` means `hot-stylix` can rewrite that target's theme/config.
 `Hot reload` means the change is applied to already-running apps without a restart.
 
-This matrix is based on the full target list in the pinned Stylix source. Right now only Ghostty is implemented in `hot-stylix`.
+This matrix is based on the full target list in the pinned Stylix source.
 
 | App | Theme switching | Hot reload |
 | --- | --- | --- |
@@ -126,7 +119,7 @@ This matrix is based on the full target list in the pinned Stylix source. Right 
 | `kitty` | ❌ | ❌ |
 | `kmscon` | ❌ | ❌ |
 | `kubecolor` | ❌ | ❌ |
-| `lazygit` | ❌ | ❌ |
+| `lazygit` | ✅ | ❌ |
 | `lightdm` | ❌ | ❌ |
 | `limine` | ❌ | ❌ |
 | `mako` | ❌ | ❌ |
@@ -155,7 +148,7 @@ This matrix is based on the full target list in the pinned Stylix source. Right 
 | `swaylock` | ❌ | ❌ |
 | `swaync` | ❌ | ❌ |
 | `sxiv` | ❌ | ❌ |
-| `tmux` | ❌ | ❌ |
+| `tmux` | ✅ | ✅ |
 | `tofi` | ❌ | ❌ |
 | `vicinae` | ❌ | ❌ |
 | `vivid` | ❌ | ❌ |
@@ -169,10 +162,10 @@ This matrix is based on the full target list in the pinned Stylix source. Right 
 | `wpaperd` | ❌ | ❌ |
 | `xfce` | ❌ | ❌ |
 | `xresources` | ❌ | ❌ |
-| `yazi` | ❌ | ❌ |
+| `yazi` | ✅ | ❌ |
 | `zathura` | ❌ | ❌ |
-| `zed` | ❌ | ❌ |
-| `zellij` | ❌ | ❌ |
+| `zed` | ✅ | ❌ |
+| `zellij` | ✅ | ❌ |
 | `zen-browser` | ❌ | ❌ |
 
 ## Custom Styles
