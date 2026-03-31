@@ -55,7 +55,9 @@ let
   );
 
   shellList = lib.concatStringsSep " " (map lib.escapeShellArg enabledTargetNames);
-  shellFunctions = lib.concatMapStringsSep "\n\n" (name: enabledTargets.${name}.shellFunctions) enabledTargetNames;
+  shellFunctions = lib.concatMapStringsSep "\n\n" (
+    name: enabledTargets.${name}.shellFunctions
+  ) enabledTargetNames;
 
   targetApplyCases = lib.concatMapStringsSep "\n" (
     name:
@@ -94,148 +96,148 @@ let
       yj
     ];
     text = ''
-      set -euo pipefail
-      export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+            set -euo pipefail
+            export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
 
-      state_dir=${lib.escapeShellArg stateDir}
-      current_style_file=${lib.escapeShellArg currentStyleFile}
-      scheme_dir=${lib.escapeShellArg schemeSources}
-      builtin_scheme_dir=${lib.escapeShellArg builtinSchemeDir}
-      default_style=${lib.escapeShellArg cfg.defaultStyle}
+            state_dir=${lib.escapeShellArg stateDir}
+            current_style_file=${lib.escapeShellArg currentStyleFile}
+            scheme_dir=${lib.escapeShellArg schemeSources}
+            builtin_scheme_dir=${lib.escapeShellArg builtinSchemeDir}
+            default_style=${lib.escapeShellArg cfg.defaultStyle}
 
-      usage() {
-        cat <<'EOF'
-usage: ${cfg.commandName} <list|current|set|reset> [style]
+            usage() {
+              cat <<'EOF'
+      usage: ${cfg.commandName} <list|current|set|reset> [style]
 
-commands:
-  list            list all available styles
-  current         print the current style name
-  set <style>     apply a style, persist it, reload supported apps
-  reset           switch back to the Stylix default style
-EOF
-      }
+      commands:
+        list            list all available styles
+        current         print the current style name
+        set <style>     apply a style, persist it, reload supported apps
+        reset           switch back to the Stylix default style
+      EOF
+            }
 
-      ensure_state_dir() {
-        mkdir -p "$state_dir"
-      }
+            ensure_state_dir() {
+              mkdir -p "$state_dir"
+            }
 
-      current_style() {
-        if [ -s "$current_style_file" ]; then
-          cat "$current_style_file"
-        else
-          printf '%s\n' "$default_style"
-        fi
-      }
+            current_style() {
+              if [ -s "$current_style_file" ]; then
+                cat "$current_style_file"
+              else
+                printf '%s\n' "$default_style"
+              fi
+            }
 
-      scheme_file_for_style() {
-        local style=$1
+            scheme_file_for_style() {
+              local style=$1
 
-        if [ -f "$scheme_dir/$style" ]; then
-          printf '%s\n' "$scheme_dir/$style"
-        elif [ -f "$builtin_scheme_dir/$style.yaml" ]; then
-          printf '%s\n' "$builtin_scheme_dir/$style.yaml"
-        elif [ -f "$builtin_scheme_dir/$style.yml" ]; then
-          printf '%s\n' "$builtin_scheme_dir/$style.yml"
-        else
-          return 1
-        fi
-      }
+              if [ -f "$scheme_dir/$style" ]; then
+                printf '%s\n' "$scheme_dir/$style"
+              elif [ -f "$builtin_scheme_dir/$style.yaml" ]; then
+                printf '%s\n' "$builtin_scheme_dir/$style.yaml"
+              elif [ -f "$builtin_scheme_dir/$style.yml" ]; then
+                printf '%s\n' "$builtin_scheme_dir/$style.yml"
+              else
+                return 1
+              fi
+            }
 
-      emit_color_vars() {
-        local scheme_file=$1
+            emit_color_vars() {
+              local scheme_file=$1
 
-        yj -yj < "$scheme_file" | jq -r '
-          . as $scheme
-          | [
-            "base00",
-            "base01",
-            "base02",
-            "base03",
-            "base04",
-            "base05",
-            "base06",
-            "base07",
-            "base08",
-            "base09",
-            "base0A",
-            "base0B",
-            "base0C",
-            "base0D",
-            "base0E",
-            "base0F"
-          ][]
-          | . as $key
-          | "\($key)=\((($scheme.palette[$key] // $scheme[$key]) // error("missing " + $key)) | @sh)"
-        '
-      }
+              yj -yj < "$scheme_file" | jq -r '
+                . as $scheme
+                | [
+                  "base00",
+                  "base01",
+                  "base02",
+                  "base03",
+                  "base04",
+                  "base05",
+                  "base06",
+                  "base07",
+                  "base08",
+                  "base09",
+                  "base0A",
+                  "base0B",
+                  "base0C",
+                  "base0D",
+                  "base0E",
+                  "base0F"
+                ][]
+                | . as $key
+                | "\($key)=\((($scheme.palette[$key] // $scheme[$key]) // error("missing " + $key)) | @sh)"
+              '
+            }
 
-      ${shellFunctions}
+            ${shellFunctions}
 
-      reload_target() {
-        case "$1" in
-          ${targetReloadCases}
-        esac
-      }
+            reload_target() {
+              case "$1" in
+                ${targetReloadCases}
+              esac
+            }
 
-      apply_style() {
-        local style="''${1:-}"
-        local scheme_file
-        local targets=(${shellList})
+            apply_style() {
+              local style="''${1:-}"
+              local scheme_file
+              local targets=(${shellList})
 
-        if [ -z "$style" ]; then
-          printf 'missing style name\n' >&2
-          usage >&2
-          exit 1
-        fi
+              if [ -z "$style" ]; then
+                printf 'missing style name\n' >&2
+                usage >&2
+                exit 1
+              fi
 
-        if ! scheme_file="$(scheme_file_for_style "$style")"; then
-          printf 'unknown style: %s\n' "$style" >&2
-          exit 1
-        fi
+              if ! scheme_file="$(scheme_file_for_style "$style")"; then
+                printf 'unknown style: %s\n' "$style" >&2
+                exit 1
+              fi
 
-        ensure_state_dir
+              ensure_state_dir
 
-        for target in "''${targets[@]}"; do
-          case "$target" in
-            ${targetApplyCases}
-          esac
-        done
+              for target in "''${targets[@]}"; do
+                case "$target" in
+                  ${targetApplyCases}
+                esac
+              done
 
-        printf '%s\n' "$style" > "$current_style_file"
+              printf '%s\n' "$style" > "$current_style_file"
 
-        for target in "''${targets[@]}"; do
-          reload_target "$target"
-        done
-      }
+              for target in "''${targets[@]}"; do
+                reload_target "$target"
+              done
+            }
 
-      command="''${1:-}"
+            command="''${1:-}"
 
-      case "$command" in
-        list)
-          {
-            find "$builtin_scheme_dir" -mindepth 1 -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) -exec basename {} \;
-            find "$scheme_dir" -mindepth 1 -maxdepth 1 -type l -exec basename {} \;
-          } | sed -e 's/\.yaml$//' -e 's/\.yml$//' | sort -u
-          ;;
-        current)
-          current_style
-          ;;
-        set)
-          shift || true
-          apply_style "''${1:-}"
-          ;;
-        reset)
-          apply_style "$default_style"
-          ;;
-        ""|-h|--help|help)
-          usage
-          ;;
-        *)
-          printf 'unknown command: %s\n' "$command" >&2
-          usage >&2
-          exit 1
-          ;;
-      esac
+            case "$command" in
+              list)
+                {
+                  find "$builtin_scheme_dir" -mindepth 1 -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) -exec basename {} \;
+                  find "$scheme_dir" -mindepth 1 -maxdepth 1 -type l -exec basename {} \;
+                } | sed -e 's/\.yaml$//' -e 's/\.yml$//' | sort -u
+                ;;
+              current)
+                current_style
+                ;;
+              set)
+                shift || true
+                apply_style "''${1:-}"
+                ;;
+              reset)
+                apply_style "$default_style"
+                ;;
+              ""|-h|--help|help)
+                usage
+                ;;
+              *)
+                printf 'unknown command: %s\n' "$command" >&2
+                usage >&2
+                exit 1
+                ;;
+            esac
     '';
   };
 in
@@ -290,7 +292,13 @@ in
     };
 
     schemes = lib.mkOption {
-      type = with lib.types; attrsOf (oneOf [ path lines attrs ]);
+      type =
+        with lib.types;
+        attrsOf (oneOf [
+          path
+          lines
+          attrs
+        ]);
       default = { };
       description = ''
         Additional styles keyed by command name.
@@ -301,45 +309,43 @@ in
   };
 
   config = lib.mkIf cfg.enable (
-    lib.mkMerge (
-      [
-        {
-          assertions = [
-            {
-              assertion = config.stylix.enable;
-              message = "programs.hot-stylix requires stylix.enable = true";
-            }
-            {
-              assertion = enabledTargetNames != [ ];
-              message = "programs.hot-stylix requires at least one enabled target";
-            }
-            {
-              assertion = lib.all (name: builtins.match schemeNamePattern name != null) schemeNames;
-              message = "programs.hot-stylix scheme names must match ${schemeNamePattern}";
-            }
-          ];
+    lib.mkMerge ([
+      {
+        assertions = [
+          {
+            assertion = config.stylix.enable;
+            message = "programs.hot-stylix requires stylix.enable = true";
+          }
+          {
+            assertion = enabledTargetNames != [ ];
+            message = "programs.hot-stylix requires at least one enabled target";
+          }
+          {
+            assertion = lib.all (name: builtins.match schemeNamePattern name != null) schemeNames;
+            message = "programs.hot-stylix scheme names must match ${schemeNamePattern}";
+          }
+        ];
 
-          xdg.enable = lib.mkDefault true;
-          home.packages = [ cli ];
+        xdg.enable = lib.mkDefault true;
+        home.packages = [ cli ];
 
-          home.activation.hotStylix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            mkdir -p ${lib.escapeShellArg stateDir}
+        home.activation.hotStylix = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          mkdir -p ${lib.escapeShellArg stateDir}
 
-            if [ -s ${lib.escapeShellArg currentStyleFile} ]; then
-              current_style="$(cat ${lib.escapeShellArg currentStyleFile})"
-            else
-              current_style=${lib.escapeShellArg cfg.defaultStyle}
-              printf '%s\n' "$current_style" > ${lib.escapeShellArg currentStyleFile}
-            fi
+          if [ -s ${lib.escapeShellArg currentStyleFile} ]; then
+            current_style="$(cat ${lib.escapeShellArg currentStyleFile})"
+          else
+            current_style=${lib.escapeShellArg cfg.defaultStyle}
+            printf '%s\n' "$current_style" > ${lib.escapeShellArg currentStyleFile}
+          fi
 
-            if ! ${lib.getExe cli} set "$current_style"; then
-              current_style=${lib.escapeShellArg cfg.defaultStyle}
-              printf '%s\n' "$current_style" > ${lib.escapeShellArg currentStyleFile}
-              ${lib.getExe cli} set "$current_style"
-            fi
-          '';
-        }
-      ]
-    )
+          if ! ${lib.getExe cli} set "$current_style"; then
+            current_style=${lib.escapeShellArg cfg.defaultStyle}
+            printf '%s\n' "$current_style" > ${lib.escapeShellArg currentStyleFile}
+            ${lib.getExe cli} set "$current_style"
+          fi
+        '';
+      }
+    ])
   );
 }

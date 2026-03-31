@@ -1,11 +1,18 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
   cfg = config.programs.hot-stylix;
-  runtimePath = "${cfg.stateDir}/zellij/hot-stylix-current.kdl";
+  runtimePath = "${cfg.stateDir}/zellij/config.kdl";
+  baseSettings = builtins.removeAttrs config.programs.zellij.settings [
+    "theme"
+    "theme_dir"
+  ];
+  baseConfigPath =
+    pkgs.writeText "hot-stylix-zellij-base.kdl" (lib.hm.generators.toKDL { } baseSettings);
 in
 {
   options.programs.hot-stylix.targets.zellij.enable = lib.mkEnableOption "runtime-managed zellij theme" // {
@@ -26,7 +33,11 @@ in
 
             eval "$(emit_color_vars "$scheme_file")"
 
-            cat > "$out_file" <<EOF
+            cat ${lib.escapeShellArg baseConfigPath} > "$out_file"
+            cat >> "$out_file" <<EOF
+
+theme "hot-stylix-current"
+
 themes {
   hot-stylix-current {
 text_unselected {
@@ -164,7 +175,7 @@ EOF
       programs.zellij.enable = lib.mkDefault true;
       programs.zellij.settings.theme = lib.mkForce "hot-stylix-current";
 
-      xdg.configFile."zellij/themes/hot-stylix-current.kdl" = lib.mkForce {
+      xdg.configFile."zellij/config.kdl" = lib.mkForce {
         source = config.lib.file.mkOutOfStoreSymlink runtimePath;
       };
     })

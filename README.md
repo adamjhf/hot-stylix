@@ -165,7 +165,7 @@ This matrix is based on the full target list in the pinned Stylix source.
 | `yazi` | ✅ | ❌ |
 | `zathura` | ❌ | ❌ |
 | `zed` | ✅ | ❌ |
-| `zellij` | ✅ | ❌ |
+| `zellij` | ✅ | ✅ |
 | `zen-browser` | ❌ | ❌ |
 
 ## Custom Styles
