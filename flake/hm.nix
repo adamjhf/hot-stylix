@@ -164,10 +164,43 @@ let
                   "base0C",
                   "base0D",
                   "base0E",
-                  "base0F"
+                  "base0F",
+                  "base10",
+                  "base11",
+                  "base12",
+                  "base13",
+                  "base14",
+                  "base15",
+                  "base16",
+                  "base17"
                 ][]
                 | . as $key
-                | "\($key)=\((($scheme.palette[$key] // $scheme[$key]) // error("missing " + $key)) | @sh)"
+                | "\($key)=\(
+                    (
+                      $scheme.palette[$key]
+                      // $scheme[$key]
+                      // (
+                        if $key == "base10" or $key == "base11" then
+                          ($scheme.palette.base00 // $scheme.base00)
+                        elif $key == "base12" then
+                          ($scheme.palette.base08 // $scheme.base08)
+                        elif $key == "base13" then
+                          ($scheme.palette.base0A // $scheme.base0A)
+                        elif $key == "base14" then
+                          ($scheme.palette.base0B // $scheme.base0B)
+                        elif $key == "base15" then
+                          ($scheme.palette.base0C // $scheme.base0C)
+                        elif $key == "base16" then
+                          ($scheme.palette.base0D // $scheme.base0D)
+                        elif $key == "base17" then
+                          ($scheme.palette.base0E // $scheme.base0E)
+                        else
+                          empty
+                        end
+                      )
+                      // error("missing " + $key)
+                    ) | @sh
+                  )"
               '
             }
 

@@ -143,7 +143,7 @@ This matrix is based on the full target list in the pinned Stylix source.
 | `sioyek` | ❌ | ❌ |
 | `spicetify` | ❌ | ❌ |
 | `spotify-player` | ❌ | ❌ |
-| `starship` | ❌ | ❌ |
+| `starship` | ✅ | ✅ |
 | `sway` | ❌ | ❌ |
 | `swaylock` | ❌ | ❌ |
 | `swaync` | ❌ | ❌ |
