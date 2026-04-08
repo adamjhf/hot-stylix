@@ -8,6 +8,7 @@ let
   cfg = config.programs.hot-stylix;
   starshipCfg = config.programs.starship;
   runtimePath = "${cfg.stateDir}/starship/starship.toml";
+  configPath = starshipCfg.configPath;
   tomlFormat = pkgs.formats.toml { };
   settingsFile = tomlFormat.generate "hot-stylix-starship-base-settings.toml" starshipCfg.settings;
   baseConfigPath =
@@ -77,12 +78,65 @@ in
                 --arg base15 "$base15" \
                 --arg base16 "$base16" \
                 --arg base17 "$base17" \
-                '$base * {
+                --arg defaultBase00 "#${config.lib.stylix.colors.base00}" \
+                --arg defaultBase01 "#${config.lib.stylix.colors.base01}" \
+                --arg defaultBase02 "#${config.lib.stylix.colors.base02}" \
+                --arg defaultBase03 "#${config.lib.stylix.colors.base03}" \
+                --arg defaultBase04 "#${config.lib.stylix.colors.base04}" \
+                --arg defaultBase05 "#${config.lib.stylix.colors.base05}" \
+                --arg defaultBase06 "#${config.lib.stylix.colors.base06}" \
+                --arg defaultBase07 "#${config.lib.stylix.colors.base07}" \
+                --arg defaultBase08 "#${config.lib.stylix.colors.base08}" \
+                --arg defaultBase09 "#${config.lib.stylix.colors.base09}" \
+                --arg defaultBase0A "#${config.lib.stylix.colors.base0A}" \
+                --arg defaultBase0B "#${config.lib.stylix.colors.base0B}" \
+                --arg defaultBase0C "#${config.lib.stylix.colors.base0C}" \
+                --arg defaultBase0D "#${config.lib.stylix.colors.base0D}" \
+                --arg defaultBase0E "#${config.lib.stylix.colors.base0E}" \
+                --arg defaultBase0F "#${config.lib.stylix.colors.base0F}" \
+                --arg defaultBase10 "#${config.lib.stylix.colors.base00}" \
+                --arg defaultBase11 "#${config.lib.stylix.colors.base00}" \
+                --arg defaultBase12 "#${config.lib.stylix.colors.base08}" \
+                --arg defaultBase13 "#${config.lib.stylix.colors.base0A}" \
+                --arg defaultBase14 "#${config.lib.stylix.colors.base0B}" \
+                --arg defaultBase15 "#${config.lib.stylix.colors.base0C}" \
+                --arg defaultBase16 "#${config.lib.stylix.colors.base0D}" \
+                --arg defaultBase17 "#${config.lib.stylix.colors.base0E}" \
+                '
+                  def remap:
+                    if . == $defaultBase00 then $base00
+                    elif . == $defaultBase01 then $base01
+                    elif . == $defaultBase02 then $base02
+                    elif . == $defaultBase03 then $base03
+                    elif . == $defaultBase04 then $base04
+                    elif . == $defaultBase05 then $base05
+                    elif . == $defaultBase06 then $base06
+                    elif . == $defaultBase07 then $base07
+                    elif . == $defaultBase08 then $base08
+                    elif . == $defaultBase09 then $base09
+                    elif . == $defaultBase0A then $base0A
+                    elif . == $defaultBase0B then $base0B
+                    elif . == $defaultBase0C then $base0C
+                    elif . == $defaultBase0D then $base0D
+                    elif . == $defaultBase0E then $base0E
+                    elif . == $defaultBase0F then $base0F
+                    elif . == $defaultBase10 then $base10
+                    elif . == $defaultBase11 then $base11
+                    elif . == $defaultBase12 then $base12
+                    elif . == $defaultBase13 then $base13
+                    elif . == $defaultBase14 then $base14
+                    elif . == $defaultBase15 then $base15
+                    elif . == $defaultBase16 then $base16
+                    elif . == $defaultBase17 then $base17
+                    else .
+                    end;
+
+                  $base * {
                   palette: "base16",
                   palettes: (
                     ($base.palettes // {}) * {
                       base16: (
-                        ($base.palettes.base16 // {}) * {
+                        (($base.palettes.base16 // {}) | with_entries(.value |= remap)) * {
                           black: $base00,
                           "bright-black": $base03,
                           white: $base05,
@@ -148,9 +202,9 @@ in
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.starship.enable {
-      home.file."${starshipCfg.configPath}" = lib.mkForce {
-        source = config.lib.file.mkOutOfStoreSymlink runtimePath;
-      };
+      home.file."${configPath}".source = lib.mkForce (
+        config.lib.file.mkOutOfStoreSymlink runtimePath
+      );
     })
   ];
 }
