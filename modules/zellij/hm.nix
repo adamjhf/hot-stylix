@@ -1,22 +1,23 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
   cfg = config.programs.hot-stylix;
-  runtimePath = "${cfg.stateDir}/zellij/config.kdl";
-  baseSettings = builtins.removeAttrs config.programs.zellij.settings [
-    "theme"
-    "theme_dir"
-  ];
-  baseConfigPath =
-    pkgs.writeText "hot-stylix-zellij-base.kdl" (lib.hm.generators.toKDL { } baseSettings);
+  themeDirSetting = config.programs.zellij.settings.theme_dir or null;
+  themeDir =
+    if themeDirSetting == null then
+      "${config.xdg.configHome}/zellij/themes"
+    else if lib.hasPrefix "/" themeDirSetting then
+      themeDirSetting
+    else
+      "${config.xdg.configHome}/zellij/${themeDirSetting}";
+  runtimePath = "${themeDir}/hot-stylix-current.kdl";
 in
 {
   options.programs.hot-stylix.targets.zellij.enable = lib.mkEnableOption "runtime-managed zellij theme" // {
-    default = true;
+    default = config.programs.zellij.enable;
   };
 
   config = lib.mkMerge [
@@ -33,118 +34,114 @@ in
 
             eval "$(emit_color_vars "$scheme_file")"
 
-            cat ${lib.escapeShellArg baseConfigPath} > "$out_file"
-            cat >> "$out_file" <<EOF
-
-theme "hot-stylix-current"
-
+            cat > "$out_file" <<EOF
 themes {
   hot-stylix-current {
-text_unselected {
+    text_unselected {
       base "$base05"
       background "$base01"
       emphasis_0 "$base09"
       emphasis_1 "$base0C"
       emphasis_2 "$base0B"
       emphasis_3 "$base0F"
-}
-text_selected {
+    }
+    text_selected {
       base "$base05"
       background "$base04"
       emphasis_0 "$base09"
       emphasis_1 "$base0C"
       emphasis_2 "$base0B"
       emphasis_3 "$base0F"
-}
-ribbon_selected {
+    }
+    ribbon_selected {
       base "$base01"
       background "$base0E"
       emphasis_0 "$base08"
       emphasis_1 "$base09"
       emphasis_2 "$base0F"
       emphasis_3 "$base0D"
-}
-ribbon_unselected {
+    }
+    ribbon_unselected {
       base "$base01"
       background "$base05"
       emphasis_0 "$base08"
       emphasis_1 "$base05"
       emphasis_2 "$base0D"
       emphasis_3 "$base0F"
-}
-table_title {
+    }
+    table_title {
       base "$base0E"
       background "$base00"
       emphasis_0 "$base09"
       emphasis_1 "$base0C"
       emphasis_2 "$base0B"
       emphasis_3 "$base0F"
-}
-table_cell_selected {
+    }
+    table_cell_selected {
       base "$base05"
       background "$base04"
       emphasis_0 "$base09"
       emphasis_1 "$base0C"
       emphasis_2 "$base0B"
       emphasis_3 "$base0F"
-}
-table_cell_unselected {
+    }
+    table_cell_unselected {
       base "$base05"
       background "$base01"
       emphasis_0 "$base09"
       emphasis_1 "$base0C"
       emphasis_2 "$base0B"
       emphasis_3 "$base0F"
-}
-list_selected {
+    }
+    list_selected {
       base "$base05"
       background "$base04"
       emphasis_0 "$base09"
       emphasis_1 "$base0C"
       emphasis_2 "$base0B"
       emphasis_3 "$base0F"
-}
-list_unselected {
+    }
+    list_unselected {
       base "$base05"
       background "$base01"
       emphasis_0 "$base09"
       emphasis_1 "$base0C"
       emphasis_2 "$base0B"
       emphasis_3 "$base0F"
-}
-frame_selected {
+    }
+    frame_selected {
       base "$base0E"
       background "$base00"
       emphasis_0 "$base09"
       emphasis_1 "$base0C"
       emphasis_2 "$base0F"
       emphasis_3 "$base00"
-}
-frame_highlight {
+    }
+    frame_highlight {
       base "$base08"
       background "$base00"
       emphasis_0 "$base0F"
       emphasis_1 "$base09"
       emphasis_2 "$base09"
       emphasis_3 "$base09"
-}
-exit_code_success {
+    }
+    exit_code_success {
       base "$base0B"
       background "$base00"
       emphasis_0 "$base0C"
       emphasis_1 "$base01"
       emphasis_2 "$base0F"
       emphasis_3 "$base0D"
-}
-exit_code_error {
+    }
+    exit_code_error {
       base "$base08"
       background "$base00"
       emphasis_0 "$base0A"
       emphasis_1 "$base00"
       emphasis_2 "$base00"
       emphasis_3 "$base00"
-}
-multiplayer_user_colors {
+    }
+    multiplayer_user_colors {
       player_1 "$base0F"
       player_2 "$base0D"
       player_3 "$base00"
@@ -155,7 +152,7 @@ multiplayer_user_colors {
       player_8 "$base00"
       player_9 "$base00"
       player_10 "$base00"
-}
+    }
   }
 }
 EOF
@@ -172,12 +169,7 @@ EOF
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.zellij.enable {
-      programs.zellij.enable = lib.mkDefault true;
       programs.zellij.settings.theme = lib.mkForce "hot-stylix-current";
-
-      xdg.configFile."zellij/config.kdl" = lib.mkForce {
-        source = config.lib.file.mkOutOfStoreSymlink runtimePath;
-      };
     })
   ];
 }

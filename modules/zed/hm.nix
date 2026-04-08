@@ -24,7 +24,7 @@ let
 in
 {
   options.programs.hot-stylix.targets.zed.enable = lib.mkEnableOption "runtime-managed zed theme" // {
-    default = false;
+    default = config.programs.zed-editor.enable;
   };
 
   config = lib.mkMerge [
@@ -98,7 +98,6 @@ in
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.zed.enable {
-      programs.zed-editor.enable = lib.mkDefault true;
       programs.zed-editor.package = lib.mkDefault null;
 
       xdg.configFile."zed/settings.json".source =

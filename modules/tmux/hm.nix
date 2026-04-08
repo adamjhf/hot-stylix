@@ -12,7 +12,7 @@ let
 in
 {
   options.programs.hot-stylix.targets.tmux.enable = lib.mkEnableOption "runtime-managed tmux theme" // {
-    default = true;
+    default = config.programs.tmux.enable;
   };
 
   config = lib.mkMerge [
@@ -71,7 +71,7 @@ in
 
           reload_tmux() {
             command -v tmux >/dev/null 2>&1 || return 0
-            tmux source-file "$HOME/.config/tmux/themes/hot-stylix-current.conf" >/dev/null 2>&1 || true
+            tmux source-file ${lib.escapeShellArg configPath} >/dev/null 2>&1 || true
           }
         '';
 
@@ -85,7 +85,6 @@ in
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.tmux.enable {
-      programs.tmux.enable = lib.mkDefault true;
       programs.tmux.extraConfig = lib.mkAfter ''
         source-file ${configPath}
       '';

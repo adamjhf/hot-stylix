@@ -11,7 +11,7 @@ let
 in
 {
   options.programs.hot-stylix.targets.yazi.enable = lib.mkEnableOption "runtime-managed yazi theme" // {
-    default = true;
+    default = config.programs.yazi.enable;
   };
 
   config = lib.mkMerge [
@@ -177,8 +177,6 @@ EOF
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.yazi.enable {
-      programs.yazi.enable = lib.mkDefault true;
-
       xdg.configFile."yazi/theme.toml" = lib.mkForce {
         source = config.lib.file.mkOutOfStoreSymlink runtimePath;
       };

@@ -34,7 +34,7 @@ let
 in
 {
   options.programs.hot-stylix.targets.lazygit.enable = lib.mkEnableOption "runtime-managed lazygit theme" // {
-    default = true;
+    default = config.programs.lazygit.enable;
   };
 
   config = lib.mkMerge [
@@ -95,8 +95,6 @@ in
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.lazygit.enable {
-      programs.lazygit.enable = lib.mkDefault true;
-
       home.file."${configDir}/lazygit/config.yml" = lib.mkForce {
         source = config.lib.file.mkOutOfStoreSymlink runtimePath;
       };

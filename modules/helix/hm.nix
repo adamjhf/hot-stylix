@@ -12,7 +12,7 @@ let
 in
 {
   options.programs.hot-stylix.targets.helix.enable = lib.mkEnableOption "runtime-managed helix theme" // {
-    default = true;
+    default = config.programs.helix.enable;
   };
 
   config = lib.mkMerge [
@@ -87,7 +87,6 @@ in
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.helix.enable {
-      programs.helix.enable = lib.mkDefault true;
       programs.helix.settings.theme = lib.mkForce "hot-stylix-current";
 
       xdg.configFile."helix/themes/hot-stylix-current.toml".source =

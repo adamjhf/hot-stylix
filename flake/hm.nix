@@ -199,7 +199,15 @@ let
                         end
                       )
                       // error("missing " + $key)
-                    ) | @sh
+                    ) as $value
+                    | (
+                        if ($value | type) == "string" and ($value | startswith("#") | not) then
+                          "#\($value)"
+                        else
+                          $value
+                        end
+                      )
+                    | @sh
                   )"
               '
             }

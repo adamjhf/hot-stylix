@@ -1,15 +1,47 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
   cfg = config.programs.hot-stylix;
   runtimePath = "${cfg.stateDir}/ghostty/current-config";
+  keyValueSettings = {
+    listsAsDuplicateKeys = true;
+    mkKeyValue = lib.generators.mkKeyValueDefault { } " = ";
+  };
+  keyValue = pkgs.formats.keyValue keyValueSettings;
+  ghosttySettings = config.programs.ghostty.settings;
+  rawConfigFiles = ghosttySettings."config-file" or null;
+  configFiles =
+    if rawConfigFiles == null then
+      [ ]
+    else if builtins.isList rawConfigFiles then
+      rawConfigFiles
+    else
+      [ rawConfigFiles ];
+  cleanedConfigFiles = lib.filter (entry: entry != "?temp") configFiles;
+  baseSettings = builtins.removeAttrs ghosttySettings [ "config-file" ];
+  baseSettingsFile =
+    if baseSettings == { } then null else keyValue.generate "hot-stylix-ghostty-base-config" baseSettings;
+  renderConfigSource = pkgs.runCommand "hot-stylix-ghostty-config" { } (
+    lib.optionalString (baseSettingsFile != null) ''
+      cat ${baseSettingsFile} > "$out"
+    ''
+    + lib.optionalString (baseSettingsFile == null) ''
+      : > "$out"
+    ''
+    + lib.concatMapStrings (
+      entry: ''
+        printf '%s\n' ${lib.escapeShellArg "config-file = ${entry}"} >> "$out"
+      ''
+    ) (cleanedConfigFiles ++ [ runtimePath ])
+  );
 in
 {
   options.programs.hot-stylix.targets.ghostty.enable = lib.mkEnableOption "runtime-managed Ghostty theme" // {
-    default = true;
+    default = config.programs.ghostty.enable || ghosttySettings != { } || config.programs.ghostty.themes != { };
   };
 
   config = lib.mkMerge [
@@ -89,9 +121,21 @@ EOF
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.ghostty.enable {
-      programs.ghostty.enable = lib.mkDefault true;
       programs.ghostty.package = lib.mkDefault null;
-      programs.ghostty.settings.config-file = lib.mkAfter [ runtimePath ];
+
+      xdg.configFile = lib.mkMerge [
+        {
+          "ghostty/config".source = lib.mkForce renderConfigSource;
+        }
+        (lib.mkIf (config.programs.ghostty.themes != { }) (
+          lib.mapAttrs' (name: value: {
+            name = "ghostty/themes/${name}";
+            value = lib.mkForce {
+              source = keyValue.generate "ghostty-${name}-theme" value;
+            };
+          }) config.programs.ghostty.themes
+        ))
+      ];
     })
   ];
 }

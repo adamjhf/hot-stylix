@@ -9,7 +9,7 @@ let
 in
 {
   options.programs.hot-stylix.targets.btop.enable = lib.mkEnableOption "runtime-managed btop theme" // {
-    default = true;
+    default = config.programs.btop.enable;
   };
 
   config = lib.mkMerge [
@@ -85,7 +85,6 @@ EOF
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.btop.enable {
-      programs.btop.enable = lib.mkDefault true;
       programs.btop.settings.color_theme = lib.mkForce "hot-stylix-current";
       programs.btop.settings.theme_background = lib.mkIf (config.stylix.opacity.terminal != 1.0) false;
 

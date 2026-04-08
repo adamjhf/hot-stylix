@@ -11,7 +11,7 @@ let
 in
 {
   options.programs.hot-stylix.targets.bat.enable = lib.mkEnableOption "runtime-managed bat theme" // {
-    default = true;
+    default = config.programs.bat.enable;
   };
 
   config = lib.mkMerge [
@@ -90,7 +90,6 @@ in
       };
     }
     (lib.mkIf config.programs.hot-stylix.targets.bat.enable {
-      programs.bat.enable = lib.mkDefault true;
       programs.bat.config.theme = lib.mkForce "hot-stylix-current";
 
       xdg.configFile."bat/themes/hot-stylix-current.tmTheme".source =
