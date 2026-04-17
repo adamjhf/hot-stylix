@@ -24,11 +24,10 @@ let
     name: scheme:
     if builtins.isPath scheme then
       scheme
-    else if builtins.isString scheme && lib.hasPrefix "/" scheme && builtins.pathExists scheme then
-      builtins.path {
-        path = scheme;
-        name = "hot-stylix-scheme-${name}.yaml";
-      }
+    else if builtins.isString scheme && lib.hasPrefix builtins.storeDir scheme && builtins.pathExists scheme then
+      pkgs.runCommandLocal "hot-stylix-scheme-${name}.yaml" { } ''
+        ln -s ${lib.escapeShellArg scheme} "$out"
+      ''
     else if builtins.isString scheme then
       pkgs.writeText "hot-stylix-scheme-${name}.yaml" scheme
     else
@@ -39,19 +38,11 @@ let
   enabledTargetNames = lib.attrNames enabledTargets;
   schemeNames = lib.attrNames availableSchemes;
 
-  schemeSources = pkgs.runCommand "hot-stylix-scheme-sources" { } (
-    ''
-      mkdir -p "$out"
-    ''
-    + lib.concatMapStringsSep "\n" (
-      schemeName:
-      let
-        sourcePath = schemeSource schemeName availableSchemes.${schemeName};
-      in
-      ''
-        ln -s ${lib.escapeShellArg "${sourcePath}"} "$out/${schemeName}"
-      ''
-    ) schemeNames
+  schemeSources = pkgs.linkFarm "hot-stylix-scheme-sources" (
+    map (schemeName: {
+      name = schemeName;
+      path = schemeSource schemeName availableSchemes.${schemeName};
+    }) schemeNames
   );
 
   shellList = lib.concatStringsSep " " (map lib.escapeShellArg enabledTargetNames);
@@ -344,7 +335,7 @@ in
       description = ''
         Additional styles keyed by command name.
         Built-in Base16 schemes from `pkgs.base16-schemes` are available automatically.
-        Values may be paths, YAML strings, or attribute sets accepted by Stylix.
+        Values may be Nix path literals, YAML strings, or attribute sets accepted by Stylix.
       '';
     };
   };
@@ -364,6 +355,15 @@ in
           {
             assertion = lib.all (name: builtins.match schemeNamePattern name != null) schemeNames;
             message = "programs.hot-stylix scheme names must match ${schemeNamePattern}";
+          }
+          {
+            assertion = lib.all (
+              scheme: !(builtins.isString scheme && lib.hasPrefix "/" scheme && !lib.isStorePath scheme)
+            ) (lib.attrValues cfg.schemes);
+            message = ''
+              programs.hot-stylix.schemes file-backed entries must use Nix path literals, not quoted absolute strings.
+              Use `/absolute/path/theme.yaml` or `./relative/theme.yaml`, not "/absolute/path/theme.yaml".
+            '';
           }
         ];
 

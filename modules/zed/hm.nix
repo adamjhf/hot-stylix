@@ -1,26 +1,13 @@
 {
   config,
   lib,
-  pkgs,
   hotStylixInputs,
   ...
 }:
 let
   cfg = config.programs.hot-stylix;
-  runtimePath = "${cfg.stateDir}/zed/settings.json";
-  themePath = "${cfg.stateDir}/zed/themes/hot-stylix-current.json";
+  runtimePath = "${cfg.stateDir}/zed/themes/hot-stylix-current.json";
   templatePath = "${hotStylixInputs.stylix.inputs."tinted-zed".outPath}/templates/default.mustache";
-  jsonFormat = pkgs.formats.json { };
-  baseSettings =
-    let
-      settings = config.programs.zed-editor.userSettings;
-      stripped =
-        if settings ? theme then
-          builtins.removeAttrs settings [ "theme" ]
-        else
-          settings;
-    in
-    jsonFormat.generate "hot-stylix-zed-base-settings.json" stripped;
 in
 {
   options.programs.hot-stylix.targets.zed.enable = lib.mkEnableOption "runtime-managed zed theme" // {
@@ -37,7 +24,6 @@ in
           render_zed() {
             local scheme_file=$1
             local out_file=$2
-            local theme_file
             local base00="" base01="" base02="" base03="" base04="" base05="" base06="" base07=""
             local base08="" base09="" base0A="" base0B="" base0C="" base0D="" base0E="" base0F=""
             local base00_hex="" base01_hex="" base02_hex="" base03_hex="" base04_hex="" base05_hex="" base06_hex="" base07_hex=""
@@ -61,8 +47,6 @@ in
             base0E_hex="''${base0E#\#}"
             base0F_hex="''${base0F#\#}"
 
-            theme_file="$(dirname "$out_file")/themes/hot-stylix-current.json"
-            mkdir -p "$(dirname "$theme_file")"
             sed \
               -e "s/{{scheme-name}}/hot-stylix-current/g" \
               -e "s/{{scheme-author}}/hot-stylix/g" \
@@ -82,9 +66,7 @@ in
               -e "s/{{base0D-hex}}/$base0D_hex/g" \
               -e "s/{{base0E-hex}}/$base0E_hex/g" \
               -e "s/{{base0F-hex}}/$base0F_hex/g" \
-              ${lib.escapeShellArg templatePath} > "$theme_file"
-
-            jq '. + { theme: "Base16 hot-stylix-current" }' ${lib.escapeShellArg baseSettings} > "$out_file"
+              ${lib.escapeShellArg templatePath} > "$out_file"
           }
         '';
 
@@ -99,11 +81,8 @@ in
     }
     (lib.mkIf config.programs.hot-stylix.targets.zed.enable {
       programs.zed-editor.package = lib.mkDefault null;
-
-      xdg.configFile."zed/settings.json".source =
-        config.lib.file.mkOutOfStoreSymlink runtimePath;
-      xdg.configFile."zed/themes/hot-stylix-current.json".source =
-        config.lib.file.mkOutOfStoreSymlink themePath;
+      programs.zed-editor.userSettings.theme = lib.mkForce "Base16 hot-stylix-current";
+      programs.zed-editor.themes.hot-stylix-current = config.lib.file.mkOutOfStoreSymlink runtimePath;
     })
   ];
 }

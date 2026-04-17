@@ -27,7 +27,8 @@ Why use it:
     homeConfigurations.me = home-manager.lib.homeManagerConfiguration {
       pkgs = import nixpkgs { system = "aarch64-darwin"; };
       modules = [
-        hot-stylix.homeManagerModules.default
+        stylix.homeModules.stylix
+        hot-stylix.homeModules.default
         {
           home.username = "me";
           home.homeDirectory = "/Users/me";
@@ -43,6 +44,8 @@ Why use it:
   };
 }
 ```
+
+`hot-stylix.homeModules.default` is the Home Manager module. Import Stylix separately in your config.
 
 Then:
 
@@ -171,6 +174,7 @@ This matrix is based on the full target list in the pinned Stylix source.
 ## Custom Styles
 
 Add custom styles with `programs.hot-stylix.schemes`. Built-in Base16 schemes from `pkgs.base16-schemes` stay available automatically.
+For file-backed styles, prefer relative Nix path literals from the current flake project.
 
 Path-backed style:
 

@@ -11,16 +11,14 @@ let
           ) (builtins.readDir modulesDir)
         )
       );
+  hotStylixModule = { ... }: {
+    _module.args.hotStylixInputs = inputs;
+    imports = [ ./hm.nix ] ++ appModules;
+  };
 in
 {
-  homeManagerModules = {
-    default = self.homeManagerModules.hot-stylix;
-    hot-stylix = { ... }: {
-      _module.args.hotStylixInputs = inputs;
-      imports = [
-        inputs.stylix.homeModules.stylix
-        ./hm.nix
-      ] ++ appModules;
-    };
+  homeModules = {
+    default = self.homeModules.hot-stylix;
+    hot-stylix = hotStylixModule;
   };
 }
