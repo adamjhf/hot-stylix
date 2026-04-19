@@ -13,6 +13,9 @@ forAllSystems (
       inherit system;
       config.allowUnfree = true;
     };
+    lib = pkgs.lib;
+    homeDirectory =
+      if pkgs.stdenv.hostPlatform.isDarwin then "/Users/tester" else "/home/tester";
     mkHome =
       module:
       inputs.home-manager.lib.homeManagerConfiguration {
@@ -28,8 +31,7 @@ forAllSystems (
       ...
     }: {
       home.username = "tester";
-      home.homeDirectory =
-        if pkgs.stdenv.hostPlatform.isDarwin then "/Users/tester" else "/home/tester";
+      home.homeDirectory = homeDirectory;
       home.stateVersion = "25.05";
 
       programs.hot-stylix.enable = true;
@@ -84,8 +86,7 @@ forAllSystems (
       ...
     }: {
       home.username = "tester";
-      home.homeDirectory =
-        if pkgs.stdenv.hostPlatform.isDarwin then "/Users/tester" else "/home/tester";
+      home.homeDirectory = homeDirectory;
       home.stateVersion = "25.05";
 
       programs.hot-stylix.enable = true;
@@ -100,9 +101,27 @@ forAllSystems (
       stylix.enable = true;
       stylix.base16Scheme = "${inputs.stylix.inputs."tinted-schemes"}/base16/tokyo-night-dark.yaml";
     });
+    assertFileContains =
+      name: file: expected:
+      pkgs.runCommand name { } ''
+        if ! grep -Fqx ${lib.escapeShellArg expected} ${lib.escapeShellArg file}; then
+          echo "missing line in ${file}: ${expected}" >&2
+          exit 1
+        fi
+
+        touch "$out"
+      '';
   in
   {
     default = home.activationPackage;
     ghostty-manual = ghosttyManual.activationPackage;
+    ghostty-config-runtime = assertFileContains
+      "hot-stylix-ghostty-config-runtime"
+      "${home.activationPackage}/home-files/.config/ghostty/config"
+      "config-file = ${homeDirectory}/.local/state/hot-stylix/ghostty/current-config";
+    ghostty-manual-config-runtime = assertFileContains
+      "hot-stylix-ghostty-manual-config-runtime"
+      "${ghosttyManual.activationPackage}/home-files/.config/ghostty/config"
+      "config-file = ${homeDirectory}/.local/state/hot-stylix/ghostty/current-config";
   }
 )

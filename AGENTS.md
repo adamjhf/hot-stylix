@@ -41,8 +41,8 @@ There is no separate unit test framework yet; the flake checks are the test suit
 - For runtime changes, smoke test with `hsx list`, `hsx current`, and `hsx set <style>`.
 - When reusing upstream templates, verify placeholder format carefully. Some templates expect bare hex (`101010`), not `#101010`.
 - Some apps need post-write rebuild steps beyond writing the theme file, e.g. cache rebuilds. Validate the app can actually see the new runtime theme after `hsx set`.
-- Before shipping a new target, test against `dotnix` with a local override:
-  `darwin-rebuild switch --flake ~/Projects/dotnix#macbook-pro --override-input hot-stylix path:$PWD --impure`
+- Before shipping a new target, test against a real consumer config with a local override, e.g.:
+  `darwin-rebuild switch --flake /path/to/your-config#hostname --override-input hot-stylix path:$PWD --impure`
 - Inspect both runtime files in `~/.local/state/hot-stylix/<app>/...` and the live linked config under `~/.config/...` to catch mismatches between rendered output and active app config.
 
 ## Commit Guidelines

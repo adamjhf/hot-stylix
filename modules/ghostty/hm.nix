@@ -6,8 +6,7 @@
 }:
 let
   cfg = config.programs.hot-stylix;
-  themeName = "hot-stylix-current";
-  runtimePath = "${cfg.stateDir}/ghostty/themes/${themeName}";
+  runtimePath = "${cfg.stateDir}/ghostty/current-config";
   keyValueSettings = {
     listsAsDuplicateKeys = true;
     mkKeyValue = lib.generators.mkKeyValueDefault { } " = ";
@@ -22,28 +21,26 @@ let
       rawConfigFiles
     else
       [ rawConfigFiles ];
-  cleanedConfigFiles = lib.filter (entry: entry != "?temp") configFiles;
-  manualBaseSettings = builtins.removeAttrs ghosttySettings [
+  baseSettings = builtins.removeAttrs ghosttySettings [
     "config-file"
     "theme"
   ];
-  manualBaseSettingsFile =
-    if manualBaseSettings == { } then null else keyValue.generate "hot-stylix-ghostty-base-config" manualBaseSettings;
+  baseSettingsFile =
+    if baseSettings == { } then null else keyValue.generate "hot-stylix-ghostty-base-config" baseSettings;
+  # Ghostty reloads config from a stable include path, so hot-stylix rewrites
+  # only the runtime file during `hsx set` and keeps the include path constant.
   manualConfigSource = pkgs.runCommand "hot-stylix-ghostty-config" { } (
-    lib.optionalString (manualBaseSettingsFile != null) ''
-      cat ${manualBaseSettingsFile} > "$out"
+    lib.optionalString (baseSettingsFile != null) ''
+      cat ${baseSettingsFile} > "$out"
     ''
-    + lib.optionalString (manualBaseSettingsFile == null) ''
+    + lib.optionalString (baseSettingsFile == null) ''
       : > "$out"
     ''
     + lib.concatMapStrings (
       entry: ''
         printf '%s\n' ${lib.escapeShellArg "config-file = ${entry}"} >> "$out"
       ''
-    ) cleanedConfigFiles
-    + ''
-      printf '%s\n' ${lib.escapeShellArg "theme = ${themeName}"} >> "$out"
-    ''
+    ) (configFiles ++ [ runtimePath ])
   );
 in
 {
@@ -102,17 +99,27 @@ EOF
           reload_ghostty() {
             local ghostty_pids=""
 
-            ghostty_pids="$(pgrep -x ghostty || true)"
-            [ -n "$ghostty_pids" ] || return 0
+            ghostty_pids="$(
+              {
+                pgrep -x ghostty || true
+                pgrep -x Ghostty || true
+                pgrep -f '/Applications/Ghostty.app/Contents/MacOS/ghostty' || true
+              } | awk 'NF' | sort -u
+            )"
 
-            printf '%s\n' "$ghostty_pids" | xargs -n1 kill -USR2 >/dev/null 2>&1 || true
-            [ "$(uname -s)" = "Darwin" ] || return 0
+            if [ -n "$ghostty_pids" ]; then
+              printf '%s\n' "$ghostty_pids" | xargs -n1 kill -USR2 >/dev/null 2>&1 || true
+            fi
+
+            [ "$(uname -s)" = "Darwin" ] || [ -n "$ghostty_pids" ] || return 0
 
             timeout 2s osascript >/dev/null 2>&1 <<'EOF' || true
 tell application id "com.mitchellh.ghostty"
-  repeat with target_terminal in terminals
-    perform action "reload_config" on target_terminal
-  end repeat
+  if running then
+    repeat with target_terminal in terminals
+      perform action "reload_config" on target_terminal
+    end repeat
+  end if
 end tell
 EOF
           }
@@ -127,23 +134,26 @@ EOF
         '';
       };
     }
-    (lib.mkIf config.programs.hot-stylix.targets.ghostty.enable {
-      assertions = [
+    (lib.mkIf config.programs.hot-stylix.targets.ghostty.enable (
+      lib.mkMerge [
         {
-          assertion = !(builtins.hasAttr themeName config.programs.ghostty.themes);
-          message = "programs.ghostty.themes.${themeName} is reserved by hot-stylix";
+          programs.ghostty.package = lib.mkDefault null;
+          programs.ghostty.settings.config-file = lib.mkIf config.programs.ghostty.enable (
+            lib.mkAfter [ runtimePath ]
+          );
         }
-      ];
-
-      programs.ghostty.package = lib.mkDefault null;
-      programs.ghostty.settings.theme = lib.mkForce themeName;
-
-      xdg.configFile."ghostty/config" = lib.mkIf (!config.programs.ghostty.enable) {
-        source = manualConfigSource;
-      };
-
-      xdg.configFile."ghostty/themes/${themeName}".source =
-        config.lib.file.mkOutOfStoreSymlink runtimePath;
-    })
+        (lib.mkIf (!config.programs.ghostty.enable) {
+          xdg.configFile."ghostty/config".source = lib.mkForce manualConfigSource;
+        })
+        (lib.mkIf (!config.programs.ghostty.enable && config.programs.ghostty.themes != { }) {
+          xdg.configFile = lib.mapAttrs' (name: value: {
+            name = "ghostty/themes/${name}";
+            value = {
+              source = keyValue.generate "ghostty-${name}-theme" value;
+            };
+          }) config.programs.ghostty.themes;
+        })
+      ]
+    ))
   ];
 }
