@@ -21,6 +21,7 @@ let
       rawConfigFiles
     else
       [ rawConfigFiles ];
+  inheritedConfigFiles = lib.filter (entry: entry != runtimePath) configFiles;
   baseSettings = builtins.removeAttrs ghosttySettings [
     "config-file"
     "theme"
@@ -29,7 +30,7 @@ let
     if baseSettings == { } then null else keyValue.generate "hot-stylix-ghostty-base-config" baseSettings;
   # Ghostty reloads config from a stable include path, so hot-stylix rewrites
   # only the runtime file during `hsx set` and keeps the include path constant.
-  manualConfigSource = pkgs.runCommand "hot-stylix-ghostty-config" { } (
+  wrapperConfigSource = pkgs.runCommand "hot-stylix-ghostty-config" { } (
     lib.optionalString (baseSettingsFile != null) ''
       cat ${baseSettingsFile} > "$out"
     ''
@@ -40,8 +41,13 @@ let
       entry: ''
         printf '%s\n' ${lib.escapeShellArg "config-file = ${entry}"} >> "$out"
       ''
-    ) (configFiles ++ [ runtimePath ])
+    ) (inheritedConfigFiles ++ [ runtimePath ])
   );
+  validateTheme =
+    name:
+    lib.optionalString (config.programs.ghostty.package != null) ''
+      ${lib.getExe config.programs.ghostty.package} +validate-config --config-file=${config.xdg.configHome}/ghostty/themes/${name}
+    '';
 in
 {
   options.programs.hot-stylix.targets.ghostty.enable = lib.mkEnableOption "runtime-managed Ghostty theme" // {
@@ -141,15 +147,14 @@ EOF
           programs.ghostty.settings.config-file = lib.mkIf config.programs.ghostty.enable (
             lib.mkAfter [ runtimePath ]
           );
+          xdg.configFile."ghostty/config".source = lib.mkForce wrapperConfigSource;
         }
-        (lib.mkIf (!config.programs.ghostty.enable) {
-          xdg.configFile."ghostty/config".source = lib.mkForce manualConfigSource;
-        })
         (lib.mkIf (!config.programs.ghostty.enable && config.programs.ghostty.themes != { }) {
           xdg.configFile = lib.mapAttrs' (name: value: {
             name = "ghostty/themes/${name}";
             value = {
               source = keyValue.generate "ghostty-${name}-theme" value;
+              onChange = validateTheme name;
             };
           }) config.programs.ghostty.themes;
         })

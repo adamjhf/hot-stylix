@@ -111,6 +111,16 @@ forAllSystems (
 
         touch "$out"
       '';
+    assertFileNotContains =
+      name: file: unexpected:
+      pkgs.runCommand name { } ''
+        if grep -Fqx ${lib.escapeShellArg unexpected} ${lib.escapeShellArg file}; then
+          echo "unexpected line in ${file}: ${unexpected}" >&2
+          exit 1
+        fi
+
+        touch "$out"
+      '';
   in
   {
     default = home.activationPackage;
@@ -123,5 +133,17 @@ forAllSystems (
       "hot-stylix-ghostty-manual-config-runtime"
       "${ghosttyManual.activationPackage}/home-files/.config/ghostty/config"
       "config-file = ${homeDirectory}/.local/state/hot-stylix/ghostty/current-config";
+    ghostty-manual-config-include = assertFileContains
+      "hot-stylix-ghostty-manual-config-include"
+      "${ghosttyManual.activationPackage}/home-files/.config/ghostty/config"
+      "config-file = /tmp/manual-ghostty-config";
+    ghostty-config-no-static-theme = assertFileNotContains
+      "hot-stylix-ghostty-config-no-static-theme"
+      "${home.activationPackage}/home-files/.config/ghostty/config"
+      "theme = stylix";
+    ghostty-manual-config-no-static-theme = assertFileNotContains
+      "hot-stylix-ghostty-manual-config-no-static-theme"
+      "${ghosttyManual.activationPackage}/home-files/.config/ghostty/config"
+      "theme = stylix";
   }
 )
