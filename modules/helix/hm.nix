@@ -7,7 +7,7 @@
 let
   cfg = config.programs.hot-stylix;
   runtimePath = "${cfg.stateDir}/helix/hot-stylix-current.toml";
-  templatePath = "${hotStylixInputs.stylix.inputs."base16-helix".outPath}/templates/default.mustache";
+  templatePath = "${hotStylixInputs.stylix.inputs."base16-helix".outPath}/templates/base16.mustache";
   transparent = config.stylix.opacity.terminal != 1.0;
 in
 {

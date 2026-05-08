@@ -63,6 +63,7 @@ forAllSystems (
         background = "101010";
         foreground = "f0f0f0";
       };
+      programs.helix.enable = true;
       programs.starship.enable = true;
       programs.starship.presets = [ "nerd-font-symbols" ];
       programs.starship.settings = {
